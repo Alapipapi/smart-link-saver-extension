@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Smart Link Saver</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS Variables for theming */
+        :root {
+            /* Light Mode Colors */
+            --background-color: #f7f9fc;
+            --text-color: #2c3e50;
+            --input-bg: #ffffff;
+            --input-border: #e0e6ed;
+            --button-primary-bg: #3498db;
+            --button-primary-hover: #2980b9;
+            --button-text: #ffffff;
+            --message-success-text: #2ecc71;
+            --message-success-bg: rgba(46, 204, 113, 0.1);
+            --message-error-text: #e74c3c;
+            --message-error-bg: rgba(231, 76, 60, 0.1);
+            --url-display-bg: #ecf0f1;
+            --url-display-border: #dde4e8;
+            --link-text: #3498db;
+            --toggle-bg-light: #cbd5e0; /* Specific for light toggle track */
+            --toggle-thumb: #ffffff; /* White for toggle thumb */
+            --toggle-sun-color: #f1c40f; /* Yellow sun */
+            --toggle-moon-color: #85b0ed; /* Muted blue for moon */
+        }
+
+        /* Dark Mode Colors - these override light mode variables when .dark-mode is applied */
+        body.dark-mode {
+            --background-color: #2c3e50;
+            --text-color: #ecf0f1;
+            --input-bg: #34495e;
+            --input-border: #4a6279;
+            --button-primary-bg: #5d9cec;
+            --button-primary-hover: #4a8ac2;
+            --button-text: #ecf0f1;
+            --message-success-text: #27ae60;
+            --message-success-bg: rgba(39, 174, 96, 0.15);
+            --message-error-text: #c0392b;
+            --message-error-bg: rgba(192, 57, 43, 0.15);
+            --url-display-bg: #3b5368;
+            --url-display-border: #526f87;
+            --link-text: #85b0ed;
+            --toggle-bg-dark: #566c80; /* Specific for dark toggle track */
+            --toggle-thumb: #ecf0f1; /* Light thumb for dark mode */
+            --toggle-sun-color: #f1c40f; /* Yellow sun (stays same or adjusted) */
+            --toggle-moon-color: #ecf0f1; /* White/light moon for dark mode */
+        }
+
+        /* General Styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            width: 320px; /* Slightly wider for better spacing */
+            padding: 20px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            box-sizing: border-box;
+            margin: 0;
+            overflow: hidden; /* Prevent scrollbar if not needed */
+        }
+
+        h3 {
+            color: var(--text-color);
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-weight: 700; /* Bolder for titles */
+            text-align: center;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 0.95em;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px; /* More rounded corners */
+            box-sizing: border-box;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1em;
+            transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--button-primary-bg); /* Highlight on focus */
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 70px; /* Taller textarea */
+            max-height: 150px;
+        }
+
+        button {
+            background-color: var(--button-primary-bg);
+            color: var(--button-text);
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            width: 100%;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            margin-bottom: 10px; /* Space between save and view all */
+        }
+        button:hover {
+            background-color: var(--button-primary-hover);
+            transform: translateY(-1px); /* Slight lift effect */
+        }
+        button:active {
+            transform: translateY(0); /* Press effect */
+        }
+
+        #message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 0.9em;
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        }
+        #message.show {
+            opacity: 1;
+        }
+        #message.success {
+            color: var(--message-success-text);
+            background-color: var(--message-success-bg);
+        }
+        #message.error {
+            color: var(--message-error-text);
+            background-color: var(--message-error-bg);
+        }
+
+        #currentUrl {
+            word-wrap: break-word;
+            background-color: var(--url-display-bg);
+            border: 1px solid var(--url-display-border);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            color: var(--text-color);
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+
+        #viewSavedLinks {
+            display: block;
+            text-align: center;
+            margin-top: 15px;
+            color: var(--link-text);
+            text-decoration: none;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        #viewSavedLinks:hover {
+            text-decoration: underline;
+        }
+
+        /* Dark Mode Toggle Switch */
+        .theme-toggle-container {
+            display: flex;
+            justify-content: flex-end; /* Align to the right */
+            margin-bottom: 15px;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px; /* width of the toggle track */
+            height: 24px; /* height of the toggle track */
+        }
+
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--toggle-bg-light); /* Initial light mode background */
+            transition: background-color 0.4s ease; /* Ensure background color transition */
+            border-radius: 34px; /* Rounded track */
+        }
+
+        /* Thumb */
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; /* thumb size */
+            width: 16px; /* thumb size */
+            left: 4px; /* initial position */
+            bottom: 4px; /* initial position */
+            background-color: var(--toggle-thumb);
+            transition: 0.4s;
+            border-radius: 50%; /* Make thumb round */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* New: Styling for the SVG icons */
+        .slider .icon {
+            position: absolute;
+            width: 16px; /* Size of the icon */
+            height: 16px; /* Size of the icon */
+            top: 50%;
+            transform: translateY(-50%);
+            transition: opacity 0.4s ease, color 0.4s ease; /* Transition for icon fade and color */
+        }
+
+        .slider .sun-icon {
+            right: 6px; /* Position sun icon for light mode */
+            opacity: 1; /* Visible by default (light mode) */
+            color: var(--toggle-sun-color); /* Apply sun color variable */
+        }
+
+        .slider .moon-icon {
+            left: 6px; /* Position moon icon for dark mode */
+            opacity: 0; /* Hidden by default (light mode) */
+            color: var(--toggle-moon-color); /* Apply moon color variable */
+        }
+
+        /* When dark mode is active (checkbox checked) */
+        input:checked + .slider {
+            background-color: var(--toggle-bg-dark); /* Apply dark mode background */
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px); /* Move thumb to the right */
+        }
+
+        input:checked + .slider .sun-icon {
+            opacity: 0; /* Hide sun icon */
+        }
+
+        input:checked + .slider .moon-icon {
+            opacity: 1; /* Show moon icon */
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle-container">
+        <label class="theme-toggle">
+            <input type="checkbox" id="darkModeToggle">
+            <span class="slider">
+                <svg class="icon sun-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 2V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M12 20V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4.93 4.93L6.344 6.344" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17.656 17.656L19.07 19.07" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M2 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M20 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M4.93 19.07L6.344 17.656" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M17.656 6.344L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg class="icon moon-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79C20.67 14.33 19.86 15.72 18.73 16.85C17.6 17.98 16.21 18.79 14.67 19.12C13.13 19.45 11.52 19.33 10.05 18.77C8.58 18.21 7.27 17.23 6.27 15.99C5.26 14.75 4.58 13.3 4.34 11.75C4.1 10.21 4.32 8.65 4.98 7.26C5.64 5.87 6.72 4.71 8.08 3.96C9.44 3.21 10.98 2.91 12.5 3.12C14.03 3.33 15.48 3.96 16.7 4.96C17.92 5.96 18.86 7.26 19.46 8.68C20.06 10.11 20.31 11.64 20.17 13.18L21 12.79Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+        </label>
+    </div>
+
+    <h3>Smart Link Saver</h3>
+    <label for="currentUrl">Current URL:</label>
+    <div id="currentUrl">Loading...</div>
+
+    <label for="note">Note (optional):</label>
+    <textarea id="note" placeholder="Add a quick note about this link..."></textarea>
+
+    <button id="saveButton">Save Link</button>
+    <div id="message"></div>
+
+    <a href="saved-links.html" id="viewSavedLinks" target="_blank">View All Saved Links</a>
+
+    <script src="popup.js"></script>
+</body>
+</html>
