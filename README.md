@@ -51,10 +51,9 @@ Currently, Smart Link Saver is available as an unpacked Chrome extension. Follow
 
 *(You'll need to create and add these screenshots to your `images` folder within this repository)*
 
-| Popup View                                      | Saved Links View (Light Mode)                       | Saved Links View (Dark Mode)                        |
-| :---------------------------------------------- | :-------------------------------------------------- | :-------------------------------------------------- |
-| ![Smart Link Saver Popup](images/screenshot1.png) | ![Saved Links Light Mode](images/screenshot2.png) | ![Saved Links Dark Mode](images/screenshot3.png) |
-
+| Popup View                                        | Saved Links View                                    |
+| :----------------------------------------------   | :-------------------------------------------------- |
+| ![Smart Link Saver Popup](images/screenshot1.png) | ![Saved Links](images/screenshot2.png)              |
 ## 🤝 Contributing
 
 We welcome contributions to the Smart Link Saver Extension! If you have suggestions, bug reports, or want to contribute code, please follow these guidelines:
