@@ -30,7 +30,6 @@ Currently, Smart Link Saver is available as an unpacked Chrome extension. Follow
 
 1.  **Download the Extension:**
     * Download the latest `.zip` file from the [releases page](https://github.com/Alapipapi/smart-link-saver-extension/releases).
-    * *(If you don't have releases yet, you can link directly to a `smart-link-saver.zip` file in your repo, or instruct users to clone the repo.)*
 2.  **Extract the Folder:**
     * Unzip the downloaded file. This will create a folder (e.g., `smart-link-saver-extension-main` or similar). Remember the location of this folder.
 3.  **Open Chrome Extensions Page:**
@@ -38,23 +37,18 @@ Currently, Smart Link Saver is available as an unpacked Chrome extension. Follow
 4.  **Enable Developer Mode:**
     * In the top-right corner of the Extensions page, toggle on the "Developer mode" switch.
     ![Developer mode toggle](images/developer-mode.png)
-    *(Remember to add this screenshot to your `images` folder!)*
 5.  **Load Unpacked:**
     * Click the "Load unpacked" button that appears.
     * Navigate to and select the unzipped `smart-link-saver-extension` folder (the one containing `manifest.json`).
     ![Load unpacked button](images/load-unpacked.png)
-    *(Remember to add this screenshot to your `images` folder!)*
 6.  **You're Done!**
     * The Smart Link Saver extension should now appear in your list of extensions and be ready to use! You might want to "pin" it to your toolbar for easy access.
 
 ## 📸 Screenshots
 
-*(You'll need to create and add these screenshots to your `images` folder within this repository)*
-
-| Popup View                                      | Saved Links View (Light Mode)                       | Saved Links View (Dark Mode)                        |
-| :---------------------------------------------- | :-------------------------------------------------- | :-------------------------------------------------- |
-| ![Smart Link Saver Popup](images/screenshot1.png) | ![Saved Links Light Mode](images/screenshot2.png) | ![Saved Links Dark Mode](images/screenshot3.png) |
-
+| Popup View                                        | Saved Links View                                    |
+| :----------------------------------------------   | :-------------------------------------------------- |
+| ![Smart Link Saver Popup](images/screenshot1.png) | ![Saved Links](images/screenshot2.png)              |
 ## 🤝 Contributing
 
 We welcome contributions to the Smart Link Saver Extension! If you have suggestions, bug reports, or want to contribute code, please follow these guidelines:
@@ -72,7 +66,6 @@ Please open an issue on our [GitHub Issues page](https://github.com/Alapipapi/sm
 ## 📄 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-*(You'll need to create a `LICENSE` file in your repository if you choose a license)*
 
 ## 📧 Contact
 
