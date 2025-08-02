@@ -1,10 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     const currentUrlDiv = document.getElementById('currentUrl');
     const noteInput = document.getElementById('note');
+    const tagsInput = document.getElementById('tagsInput');
     const saveButton = document.getElementById('saveButton');
     const messageDiv = document.getElementById('message');
+    const messageText = messageDiv.querySelector('.text');
+    const successIcon = messageDiv.querySelector('.success-icon');
+    const errorIcon = messageDiv.querySelector('.error-icon');
     const darkModeToggle = document.getElementById('darkModeToggle');
-    // const viewSavedLinksButton = document.getElementById('viewSavedLinks'); // Already an anchor
 
     // --- Theme Management ---
     function applyTheme(theme) {
@@ -19,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load saved theme preference
     chrome.storage.local.get('theme', function(data) {
-        const savedTheme = data.theme || 'light'; // Default to light
+        const savedTheme = data.theme || 'light';
         applyTheme(savedTheme);
     });
 
@@ -31,11 +34,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Core Link Saving Logic ---
-    // Get the current tab's URL when the popup opens
+    // Get the current tab's URL and title when the popup opens
     chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
         const currentTab = tabs[0];
         if (currentTab && currentTab.url) {
             currentUrlDiv.textContent = currentTab.url;
+            // Automatically suggest the page title as the note
+            if (currentTab.title) {
+                noteInput.value = currentTab.title;
+            }
         } else {
             currentUrlDiv.textContent = "Could not get current URL.";
         }
@@ -43,38 +50,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to show messages
     function showMessage(msg, type = 'success') {
-        messageDiv.textContent = msg;
-        messageDiv.className = 'show'; // Reset classes
+        // Hide all icons and clear classes first
+        messageDiv.classList.remove('success', 'error');
+        successIcon.style.display = 'none';
+        errorIcon.style.display = 'none';
+        messageText.textContent = msg;
+
+        // Apply correct classes and show the right icon
+        messageDiv.classList.add('show', type);
         if (type === 'success') {
-            messageDiv.classList.add('success');
+            successIcon.style.display = 'flex';
         } else if (type === 'error') {
-            messageDiv.classList.add('error');
-        } else {
-            messageDiv.style.color = 'orange'; // For warning/info
+            errorIcon.style.display = 'flex';
         }
 
-        // Temporarily hide the message after a few seconds
         setTimeout(() => {
             messageDiv.classList.remove('show');
-            messageDiv.textContent = ''; // Clear text
-            messageDiv.className = ''; // Remove all classes
-        }, 3000); // Clear message after 3 seconds
+        }, 3000);
     }
 
     // Event listener for the save button
     saveButton.addEventListener('click', function() {
         const urlToSave = currentUrlDiv.textContent;
         const noteToSave = noteInput.value.trim();
+        const tagsToSave = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
 
         if (urlToSave === "Loading..." || urlToSave === "Could not get current URL.") {
             showMessage("Please wait for the URL to load.", "error");
             return;
         }
         if (!urlToSave || urlToSave.startsWith("chrome://")) {
-             showMessage("Cannot save this URL.", "error");
-             return;
+            showMessage("Cannot save this URL.", "error");
+            return;
         }
-
 
         // Get existing links from storage, add the new one, and save back
         chrome.storage.local.get({ savedLinks: [] }, function(data) {
@@ -82,16 +90,18 @@ document.addEventListener('DOMContentLoaded', function() {
             const newLink = {
                 url: urlToSave,
                 note: noteToSave,
-                date: new Date().toISOString() // Save current date/time
+                tags: tagsToSave,
+                date: new Date().toISOString()
             };
-            savedLinks.unshift(newLink); // Add to the beginning of the array
+            savedLinks.unshift(newLink);
 
             chrome.storage.local.set({ savedLinks: savedLinks }, function() {
                 if (chrome.runtime.lastError) {
                     showMessage("Error saving link: " + chrome.runtime.lastError.message, "error");
                 } else {
                     showMessage("Link saved successfully!", "success");
-                    noteInput.value = ''; // Clear the note input after saving
+                    noteInput.value = '';
+                    tagsInput.value = '';
                 }
             });
         });

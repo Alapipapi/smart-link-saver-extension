@@ -6,7 +6,6 @@
     <style>
         /* CSS Variables for theming */
         :root {
-            /* Light Mode Colors */
             --background-color: #f7f9fc;
             --text-color: #2c3e50;
             --input-bg: #ffffff;
@@ -18,16 +17,13 @@
             --message-success-bg: rgba(46, 204, 113, 0.1);
             --message-error-text: #e74c3c;
             --message-error-bg: rgba(231, 76, 60, 0.1);
-            --url-display-bg: #ecf0f1;
-            --url-display-border: #dde4e8;
-            --link-text: #3498db;
-            --toggle-bg-light: #cbd5e0; /* Specific for light toggle track */
-            --toggle-thumb: #ffffff; /* White for toggle thumb */
-            --toggle-sun-color: #f1c40f; /* Yellow sun */
-            --toggle-moon-color: #85b0ed; /* Muted blue for moon */
+            --toggle-bg-light: #cbd5e0;
+            --toggle-thumb: #ffffff;
+            --toggle-sun-color: #f1c40f;
+            --toggle-moon-color: #85b0ed;
         }
 
-        /* Dark Mode Colors - these override light mode variables when .dark-mode is applied */
+        /* Dark Mode Colors */
         body.dark-mode {
             --background-color: #2c3e50;
             --text-color: #ecf0f1;
@@ -40,142 +36,170 @@
             --message-success-bg: rgba(39, 174, 96, 0.15);
             --message-error-text: #c0392b;
             --message-error-bg: rgba(192, 57, 43, 0.15);
-            --url-display-bg: #3b5368;
-            --url-display-border: #526f87;
-            --link-text: #85b0ed;
-            --toggle-bg-dark: #566c80; /* Specific for dark toggle track */
-            --toggle-thumb: #ecf0f1; /* Light thumb for dark mode */
-            --toggle-sun-color: #f1c40f; /* Yellow sun (stays same or adjusted) */
-            --toggle-moon-color: #ecf0f1; /* White/light moon for dark mode */
+            --toggle-bg-dark: #566c80;
+            --toggle-thumb: #ecf0f1;
+            --toggle-sun-color: #f1c40f;
+            --toggle-moon-color: #ecf0f1;
         }
 
         /* General Styling */
         body {
             font-family: 'Inter', sans-serif;
-            width: 320px; /* Slightly wider for better spacing */
+            width: 350px;
             padding: 20px;
+            margin: 0;
             background-color: var(--background-color);
             color: var(--text-color);
             transition: background-color 0.3s ease, color 0.3s ease;
             box-sizing: border-box;
-            margin: 0;
-            overflow: hidden; /* Prevent scrollbar if not needed */
         }
 
-        h3 {
+        h1 {
             color: var(--text-color);
-            margin-top: 0;
-            margin-bottom: 15px;
-            font-weight: 700; /* Bolder for titles */
-            text-align: center;
+            font-size: 1.5em;
+            margin: 0 0 20px 0;
+            font-weight: 700;
         }
 
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .url-display {
+            font-size: 0.9em;
             color: var(--text-color);
-            font-size: 0.95em;
-        }
-
-        input[type="text"], textarea {
-            width: 100%;
-            padding: 10px 12px;
-            margin-bottom: 15px;
+            background-color: var(--input-bg);
             border: 1px solid var(--input-border);
-            border-radius: 8px; /* More rounded corners */
-            box-sizing: border-box;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            word-wrap: break-word;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--input-border);
+            border-radius: 8px;
             background-color: var(--input-bg);
             color: var(--text-color);
-            font-size: 1em;
+            box-sizing: border-box;
             transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            resize: vertical;
         }
-        input[type="text"]:focus, textarea:focus {
+
+        textarea:focus, input:focus {
             outline: none;
-            border-color: var(--button-primary-bg); /* Highlight on focus */
+            border-color: var(--button-primary-bg);
             box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
 
-        textarea {
-            resize: vertical;
-            min-height: 70px; /* Taller textarea */
-            max-height: 150px;
-        }
-
-        button {
-            background-color: var(--button-primary-bg);
-            color: var(--button-text);
-            padding: 12px 15px;
+        /* Consolidated styling for both buttons for consistency */
+        #saveButton, .links-button {
+            width: 100%;
+            padding: 12px;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-size: 1em;
             font-weight: 600;
-            width: 100%;
             transition: background-color 0.2s ease, transform 0.1s ease;
-            margin-bottom: 10px; /* Space between save and view all */
-        }
-        button:hover {
-            background-color: var(--button-primary-hover);
-            transform: translateY(-1px); /* Slight lift effect */
-        }
-        button:active {
-            transform: translateY(0); /* Press effect */
+            text-decoration: none;
+            text-align: center;
+            box-sizing: border-box;
+            display: block;
         }
 
-        #message {
-            margin-top: 15px;
-            padding: 10px;
-            border-radius: 6px;
-            font-weight: 600;
-            text-align: center;
-            font-size: 0.9em;
-            opacity: 0; /* Hidden by default */
-            transition: opacity 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+        #saveButton {
+            background-color: var(--button-primary-bg);
+            color: var(--button-text);
+            margin-top: 10px;
         }
-        #message.show {
+        #saveButton:hover {
+            background-color: var(--button-primary-hover);
+            transform: translateY(-1px);
+        }
+        #saveButton:active {
+            transform: translateY(0);
+        }
+
+        .links-button {
+            margin-top: 15px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            border: 1px solid var(--input-border);
+        }
+        .links-button:hover {
+            background-color: var(--input-border);
+        }
+
+        /* NEW: Modern message UI with spacing fix */
+        .message {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            overflow: hidden;
+            
+            /* Properties for the collapse effect */
+            max-height: 0;
+            padding: 0 16px;
+            margin-top: 0;
+            opacity: 0;
+            transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out, margin-top 0.4s ease-in-out, opacity 0.4s ease;
+        }
+        
+        .message.show {
+            max-height: 100px; /* A fixed height large enough for the content */
+            padding: 12px 16px;
+            margin-top: 15px;
             opacity: 1;
         }
-        #message.success {
-            color: var(--message-success-text);
+
+        .message.success {
             background-color: var(--message-success-bg);
+            color: var(--message-success-text);
+            border-left: 5px solid var(--message-success-text);
         }
-        #message.error {
-            color: var(--message-error-text);
+        .message.error {
             background-color: var(--message-error-bg);
+            color: var(--message-error-text);
+            border-left: 5px solid var(--message-error-text);
         }
-
-        #currentUrl {
-            word-wrap: break-word;
-            background-color: var(--url-display-bg);
-            border: 1px solid var(--url-display-border);
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 0.9em;
-            margin-bottom: 15px;
-            color: var(--text-color);
-            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        .message .icon {
+            display: flex;
+            align-items: center;
+            color: inherit;
         }
-
-        #viewSavedLinks {
-            display: block;
-            text-align: center;
-            margin-top: 15px;
-            color: var(--link-text);
-            text-decoration: none;
-            font-size: 0.9em;
-            font-weight: 600;
-            transition: color 0.3s ease;
+        .message svg {
+            width: 20px;
+            height: 20px;
+            stroke-width: 2.5;
         }
-        #viewSavedLinks:hover {
-            text-decoration: underline;
+        .message .text {
+            flex-grow: 1;
         }
 
         /* Dark Mode Toggle Switch */
         .theme-toggle-container {
             display: flex;
-            justify-content: flex-end; /* Align to the right */
-            margin-bottom: 15px;
+            justify-content: flex-end;
             align-items: center;
             gap: 10px;
         }
@@ -183,8 +207,8 @@
         .theme-toggle {
             position: relative;
             display: inline-block;
-            width: 44px; /* width of the toggle track */
-            height: 24px; /* height of the toggle track */
+            width: 44px;
+            height: 24px;
         }
 
         .theme-toggle input {
@@ -200,100 +224,110 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: var(--toggle-bg-light); /* Initial light mode background */
-            transition: background-color 0.4s ease; /* Ensure background color transition */
-            border-radius: 34px; /* Rounded track */
+            background-color: var(--toggle-bg-light);
+            transition: background-color 0.4s ease;
+            border-radius: 34px;
         }
 
-        /* Thumb */
         .slider:before {
             position: absolute;
             content: "";
-            height: 16px; /* thumb size */
-            width: 16px; /* thumb size */
-            left: 4px; /* initial position */
-            bottom: 4px; /* initial position */
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
             background-color: var(--toggle-thumb);
             transition: 0.4s;
-            border-radius: 50%; /* Make thumb round */
+            border-radius: 50%;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* New: Styling for the SVG icons */
         .slider .icon {
             position: absolute;
-            width: 16px; /* Size of the icon */
-            height: 16px; /* Size of the icon */
+            width: 16px;
+            height: 16px;
             top: 50%;
             transform: translateY(-50%);
-            transition: opacity 0.4s ease, color 0.4s ease; /* Transition for icon fade and color */
+            transition: opacity 0.4s ease, color 0.4s ease;
         }
 
         .slider .sun-icon {
-            right: 6px; /* Position sun icon for light mode */
-            opacity: 1; /* Visible by default (light mode) */
-            color: var(--toggle-sun-color); /* Apply sun color variable */
+            right: 6px;
+            opacity: 1;
+            color: var(--toggle-sun-color);
         }
 
         .slider .moon-icon {
-            left: 6px; /* Position moon icon for dark mode */
-            opacity: 0; /* Hidden by default (light mode) */
-            color: var(--toggle-moon-color); /* Apply moon color variable */
+            left: 6px;
+            opacity: 0;
+            color: var(--toggle-moon-color);
         }
 
-        /* When dark mode is active (checkbox checked) */
         input:checked + .slider {
-            background-color: var(--toggle-bg-dark); /* Apply dark mode background */
+            background-color: var(--toggle-bg-dark);
         }
 
         input:checked + .slider:before {
-            transform: translateX(20px); /* Move thumb to the right */
+            transform: translateX(20px);
         }
 
         input:checked + .slider .sun-icon {
-            opacity: 0; /* Hide sun icon */
+            opacity: 0;
         }
 
         input:checked + .slider .moon-icon {
-            opacity: 1; /* Show moon icon */
+            opacity: 1;
         }
     </style>
 </head>
 <body>
-    <div class="theme-toggle-container">
-        <label class="theme-toggle">
-            <input type="checkbox" id="darkModeToggle">
-            <span class="slider">
-                <svg class="icon sun-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 2V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M12 20V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M4.93 4.93L6.344 6.344" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M17.656 17.656L19.07 19.07" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M2 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M20 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M4.93 19.07L6.344 17.656" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M17.656 6.344L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <svg class="icon moon-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M21 12.79C20.67 14.33 19.86 15.72 18.73 16.85C17.6 17.98 16.21 18.79 14.67 19.12C13.13 19.45 11.52 19.33 10.05 18.77C8.58 18.21 7.27 17.23 6.27 15.99C5.26 14.75 4.58 13.3 4.34 11.75C4.1 10.21 4.32 8.65 4.98 7.26C5.64 5.87 6.72 4.71 8.08 3.96C9.44 3.21 10.98 2.91 12.5 3.12C14.03 3.33 15.48 3.96 16.7 4.96C17.92 5.96 18.86 7.26 19.46 8.68C20.06 10.11 20.31 11.64 20.17 13.18L21 12.79Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </span>
-        </label>
+    <div class="popup-header">
+        <h1>Smart Link Saver</h1>
+        <div class="theme-toggle-container">
+            <label class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider">
+                    <svg class="icon sun-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 2V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 20V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4.93 4.93L6.344 6.344" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17.656 17.656L19.07 19.07" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M20 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4.93 19.07L6.344 17.656" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17.656 6.344L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg class="icon moon-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 12.79C20.67 14.33 19.86 15.72 18.73 16.85C17.6 17.98 16.21 18.79 14.67 19.12C13.13 19.45 11.52 19.33 10.05 18.77C8.58 18.21 7.27 17.23 6.27 15.99C5.26 14.75 4.58 13.3 4.34 11.75C4.1 10.21 4.32 8.65 4.98 7.26C5.64 5.87 6.72 4.71 8.08 3.96C9.44 3.21 10.98 2.91 12.5 3.12C14.03 3.33 15.48 3.96 16.7 4.96C17.92 5.96 18.86 7.26 19.46 8.68C20.06 10.11 20.31 11.64 20.17 13.18L21 12.79Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+            </label>
+        </div>
     </div>
+    <div id="currentUrl" class="url-display">Loading...</div>
 
-    <h3>Smart Link Saver</h3>
-    <label for="currentUrl">Current URL:</label>
-    <div id="currentUrl">Loading...</div>
-
-    <label for="note">Note (optional):</label>
-    <textarea id="note" placeholder="Add a quick note about this link..."></textarea>
-
+    <div class="input-group">
+        <label for="note">Note:</label>
+        <textarea id="note" placeholder="Add a quick note..."></textarea>
+    </div>
+    <div class="input-group">
+        <label for="tagsInput">Tags (comma-separated):</label>
+        <input type="text" id="tagsInput" placeholder="e.g. project, research, work">
+    </div>
     <button id="saveButton">Save Link</button>
-    <div id="message"></div>
+    <a href="saved-links.html" target="_blank" class="links-button">View Saved Links</a>
 
-    <a href="saved-links.html" id="viewSavedLinks" target="_blank">View All Saved Links</a>
-
+    <div id="message" class="message">
+        <div class="icon success-icon" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-8.76"></path><path d="M22 4L12 14.01l-3-3"></path></svg>
+        </div>
+        <div class="icon error-icon" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </div>
+        <span class="text"></span>
+    </div>
+    
     <script src="popup.js"></script>
 </body>
 </html>

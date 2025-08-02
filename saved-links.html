@@ -6,7 +6,6 @@
     <style>
         /* CSS Variables for theming - MUST BE CONSISTENT WITH POPUP.HTML */
         :root {
-            /* Light Mode Colors */
             --background-color: #f7f9fc;
             --text-color: #2c3e50;
             --input-bg: #ffffff;
@@ -21,16 +20,19 @@
             --card-bg: #ffffff;
             --card-border: #e0e6ed;
             --link-url-color: #3498db;
-            --secondary-text-color: #7f8c8d; /* For notes and dates */
+            --secondary-text-color: #7f8c8d;
             --delete-button-bg: #e74c3c;
             --delete-button-hover: #c0392b;
             --toggle-bg-light: #cbd5e0;
             --toggle-thumb: #ffffff;
             --toggle-sun-color: #f1c40f;
             --toggle-moon-color: #85b0ed;
+            --tag-bg: #e0e6ed;
+            --tag-text: #7f8c8d;
+            --export-button-bg: #9b59b6;
+            --export-button-hover: #8e44ad;
         }
 
-        /* Dark Mode Colors - these override light mode variables when .dark-mode is applied */
         body.dark-mode {
             --background-color: #2c3e50;
             --text-color: #ecf0f1;
@@ -43,19 +45,22 @@
             --message-success-bg: rgba(39, 174, 96, 0.15);
             --message-error-text: #c0392b;
             --message-error-bg: rgba(192, 57, 43, 0.15);
-            --card-bg: #34495e; /* Darker card background */
+            --card-bg: #34495e;
             --card-border: #4a6279;
-            --link-url-color: #85b0ed; /* Lighter blue for dark mode links */
-            --secondary-text-color: #aebecd; /* Lighter secondary text */
-            --delete-button-bg: #c0392b; /* Slightly darker red for dark mode */
+            --link-url-color: #85b0ed;
+            --secondary-text-color: #aebecd;
+            --delete-button-bg: #c0392b;
             --delete-button-hover: #a93226;
             --toggle-bg-dark: #566c80;
             --toggle-thumb: #ecf0f1;
             --toggle-sun-color: #f1c40f;
             --toggle-moon-color: #ecf0f1;
+            --tag-bg: #4a6279;
+            --tag-text: #ecf0f1;
+            --export-button-bg: #8e44ad;
+            --export-button-hover: #7b3d9d;
         }
 
-        /* General Styling */
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
@@ -64,7 +69,7 @@
             color: var(--text-color);
             transition: background-color 0.3s ease, color 0.3s ease;
             box-sizing: border-box;
-            min-width: 400px; /* Ensure a decent minimum width */
+            min-width: 400px;
         }
 
         h1 {
@@ -75,7 +80,6 @@
             font-weight: 700;
         }
 
-        /* Header for title and toggle */
         .page-header {
             display: flex;
             justify-content: space-between;
@@ -86,23 +90,47 @@
             margin: 0;
         }
 
-        #searchContainer {
-            margin-bottom: 25px;
-            text-align: center;
+        .actions-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
         }
-        #searchInput {
-            width: 80%; /* Wider search bar */
-            max-width: 500px;
-            padding: 12px 15px; /* More padding */
+        #exportButton {
+            padding: 12px 15px;
+            background-color: var(--export-button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        #exportButton:hover {
+            background-color: var(--export-button-hover);
+            transform: translateY(-1px);
+        }
+        #exportButton:active {
+            transform: translateY(0);
+        }
+
+        .search-and-filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        #searchInput, #tagFilterInput {
+            flex-grow: 1;
+            padding: 12px 15px;
             border: 1px solid var(--input-border);
-            border-radius: 8px; /* More rounded corners */
+            border-radius: 8px;
             font-size: 1em;
             background-color: var(--input-bg);
             color: var(--text-color);
             box-sizing: border-box;
             transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
         }
-        #searchInput:focus {
+        #searchInput:focus, #tagFilterInput:focus {
             outline: none;
             border-color: var(--button-primary-bg);
             box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
@@ -111,14 +139,14 @@
         #linksContainer {
             display: flex;
             flex-direction: column;
-            gap: 18px; /* Slightly more space between link items */
+            gap: 18px;
         }
         .link-item {
             background-color: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 10px; /* More rounded cards */
+            border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.08); /* Stronger, softer shadow */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
             position: relative;
             transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
         }
@@ -128,7 +156,7 @@
             font-size: 1.15em;
             word-wrap: break-word;
             font-weight: 600;
-            text-align: left; /* Align link title to left */
+            text-align: left;
         }
         .link-item h3 a {
             text-decoration: none;
@@ -145,6 +173,20 @@
             color: var(--secondary-text-color);
             word-wrap: break-word;
         }
+        .tags-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .tag {
+            background-color: var(--tag-bg);
+            color: var(--tag-text);
+            font-size: 0.8em;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
         .link-item .date {
             font-size: 0.8em;
             color: var(--secondary-text-color);
@@ -155,7 +197,7 @@
             background-color: var(--delete-button-bg);
             color: white;
             border: none;
-            border-radius: 6px; /* Slightly more rounded delete button */
+            border-radius: 6px;
             padding: 8px 12px;
             cursor: pointer;
             font-size: 0.85em;
@@ -181,14 +223,13 @@
             margin-top: 50px;
             font-size: 1.2em;
         }
-        #noSearchResultsMessage { /* New message for no search results */
+        #noSearchResultsMessage {
             text-align: center;
             color: var(--secondary-text-color);
             margin-top: 20px;
             font-size: 1em;
         }
 
-        /* Dark Mode Toggle Switch (Copied from popup.html for consistency) */
         .theme-toggle-container {
             display: flex;
             justify-content: flex-end;
@@ -221,7 +262,6 @@
             border-radius: 34px;
         }
 
-        /* Thumb */
         .slider:before {
             position: absolute;
             content: "";
@@ -235,7 +275,6 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* Styling for the SVG icons */
         .slider .icon {
             position: absolute;
             width: 16px;
@@ -257,7 +296,6 @@
             color: var(--toggle-moon-color);
         }
 
-        /* When dark mode is active (checkbox checked) */
         input:checked + .slider {
             background-color: var(--toggle-bg-dark);
         }
@@ -277,7 +315,7 @@
 </head>
 <body>
     <div class="page-header">
-        <h1>Your Saved Links</h1>
+        <h1>Smart Link Saver</h1>
         <div class="theme-toggle-container">
             <label class="theme-toggle">
                 <input type="checkbox" id="darkModeToggle">
@@ -301,12 +339,16 @@
         </div>
     </div>
 
-    <div id="searchContainer">
-        <input type="text" id="searchInput" placeholder="Search by URL or note...">
+    <div class="actions-bar">
+        <button id="exportButton">Export All Links</button>
     </div>
 
-    <div id="linksContainer">
-        </div>
+    <div class="search-and-filter-bar">
+        <input type="text" id="searchInput" placeholder="Search by URL or note...">
+        <input type="text" id="tagFilterInput" placeholder="Filter by tag...">
+    </div>
+
+    <div id="linksContainer"></div>
 
     <div id="noLinksMessage" style="display: none;">
         You haven't saved any links yet! Start saving from the extension popup.

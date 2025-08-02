@@ -18,3 +18,14 @@ console.log("Smart Link Saver background service worker active.");
 chrome.runtime.onInstalled.addListener(() => {
     console.log("Smart Link Saver extension installed or updated.");
 });
+
+
+// --- NEW: Keyboard Shortcut Listener ---
+// Listen for the command to be triggered
+chrome.commands.onCommand.addListener(async (command) => {
+    // Check if the triggered command is "_execute_action"
+    if (command === "_execute_action") {
+        // This is a minimal way to open the popup from the background script
+        chrome.action.openPopup();
+    }
+});
