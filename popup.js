@@ -8,6 +8,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const successIcon = messageDiv.querySelector('.success-icon');
     const errorIcon = messageDiv.querySelector('.error-icon');
     const darkModeToggle = document.getElementById('darkModeToggle');
+    const versionInfoDiv = document.getElementById('versionInfo');
+
+    // --- NEW: Display version number from manifest ---
+    const manifest = chrome.runtime.getManifest();
+    versionInfoDiv.textContent = `v${manifest.version}`;
 
     // --- Theme Management ---
     function applyTheme(theme) {
@@ -83,10 +88,24 @@ document.addEventListener('DOMContentLoaded', function() {
             showMessage("Cannot save this URL.", "error");
             return;
         }
+        
+        // Prevent saving internal extension pages
+        if (urlToSave.includes("saved-links.html")) {
+            showMessage("Cannot save the 'View Saved Links' page.", "error");
+            return;
+        }
 
         // Get existing links from storage, add the new one, and save back
         chrome.storage.local.get({ savedLinks: [] }, function(data) {
             const savedLinks = data.savedLinks;
+
+            // Check for duplicate URL before saving
+            const isDuplicate = savedLinks.some(link => link.url === urlToSave);
+            if (isDuplicate) {
+                showMessage("This URL has already been saved!", "error");
+                return;
+            }
+
             const newLink = {
                 url: urlToSave,
                 note: noteToSave,

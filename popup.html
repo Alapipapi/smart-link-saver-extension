@@ -52,6 +52,7 @@
             color: var(--text-color);
             transition: background-color 0.3s ease, color 0.3s ease;
             box-sizing: border-box;
+            position: relative; /* Added for version number positioning */
         }
 
         h1 {
@@ -148,7 +149,7 @@
             background-color: var(--input-border);
         }
 
-        /* NEW: Modern message UI with spacing fix */
+        /* Message UI */
         .message {
             display: flex;
             align-items: center;
@@ -156,17 +157,15 @@
             border-radius: 8px;
             font-weight: 600;
             overflow: hidden;
-            
-            /* Properties for the collapse effect */
             max-height: 0;
             padding: 0 16px;
             margin-top: 0;
             opacity: 0;
             transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out, margin-top 0.4s ease-in-out, opacity 0.4s ease;
         }
-        
+
         .message.show {
-            max-height: 100px; /* A fixed height large enough for the content */
+            max-height: 100px;
             padding: 12px 16px;
             margin-top: 15px;
             opacity: 1;
@@ -278,6 +277,15 @@
         input:checked + .slider .moon-icon {
             opacity: 1;
         }
+
+        /* NEW: Version Info Styling */
+        #versionInfo {
+            position: absolute;
+            bottom: 10px;
+            right: 15px;
+            font-size: 0.7em;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -328,6 +336,8 @@
         <span class="text"></span>
     </div>
     
+    <div id="versionInfo"></div>
+
     <script src="popup.js"></script>
 </body>
 </html>
