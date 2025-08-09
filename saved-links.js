@@ -1,175 +1,301 @@
 document.addEventListener('DOMContentLoaded', function() {
     const linksContainer = document.getElementById('linksContainer');
     const searchInput = document.getElementById('searchInput');
-    const tagFilterInput = document.getElementById('tagFilterInput'); // NEW: Get the tag filter input
-    const exportButton = document.getElementById('exportButton'); // NEW: Get the export button
-    const noLinksMessage = document.getElementById('noLinksMessage');
-    const noSearchResultsMessage = document.getElementById('noSearchResultsMessage');
-    const darkModeToggle = document.getElementById('darkModeToggle');
+    const exportButton = document.getElementById('exportButton');
+    const clearAllButton = document.getElementById('clearAllButton');
+    const deleteSelectedButton = document.getElementById('deleteSelectedButton');
+    const noLinksMessage = linksContainer.querySelector('.no-links');
+    const tagListContainer = document.getElementById('tagList');
+    const linkCountDisplay = document.getElementById('linkCount');
 
-    let allSavedLinks = []; // Store all links for searching and filtering
+    const editModal = document.getElementById('editModal');
+    const closeButton = editModal.querySelector('.close');
+    const editForm = document.getElementById('editForm');
+    const editNoteInput = document.getElementById('editNote');
+    const editTagsInput = document.getElementById('editTags');
+    const editUrlInput = document.getElementById('editUrl'); // Corrected to use the input field
+    const cancelEditButton = document.getElementById('cancelEditButton');
+    
+    let allLinks = [];
+    let currentTagFilter = null;
 
-    // --- Theme Management (Copied from popup.js) ---
-    function applyTheme(theme) {
-        if (theme === 'dark') {
+    // Load theme from storage
+    chrome.storage.local.get('theme', function(data) {
+        if (data.theme === 'dark') {
             document.body.classList.add('dark-mode');
-            darkModeToggle.checked = true;
+        }
+    });
+    
+    function updateLinkCount() {
+        const totalLinks = allLinks.length;
+        const displayedLinks = linksContainer.querySelectorAll('.link-card').length;
+        if (totalLinks === displayedLinks) {
+            linkCountDisplay.textContent = `${totalLinks} Links Saved`;
         } else {
-            document.body.classList.remove('dark-mode');
-            darkModeToggle.checked = false;
+            linkCountDisplay.textContent = `${displayedLinks} of ${totalLinks} Links Displayed`;
         }
     }
 
-    // Load saved theme preference
-    chrome.storage.local.get('theme', function(data) {
-        const savedTheme = data.theme || 'light'; // Default to light
-        applyTheme(savedTheme);
-    });
+    function renderTags() {
+        tagListContainer.innerHTML = '';
+        if (allLinks.length === 0) {
+            tagListContainer.innerHTML = '<p class="no-tags" style="font-style: italic;">No tags found.</p>';
+            return;
+        }
 
-    // Listen for theme toggle changes
-    darkModeToggle.addEventListener('change', function() {
-        const newTheme = darkModeToggle.checked ? 'dark' : 'light';
-        applyTheme(newTheme);
-        chrome.storage.local.set({ theme: newTheme });
-    });
+        const allTags = allLinks.flatMap(link => link.tags);
+        const uniqueTags = [...new Set(allTags.filter(tag => tag && tag.trim().length > 0))].sort();
 
-    // --- Core Link Display and Management Logic ---
-    // Function to load and display links with both search and tag filters
-    function loadAndDisplayLinks(searchTerm = '', tagFilterTerm = '') {
-        chrome.storage.local.get({ savedLinks: [] }, function(data) {
-            allSavedLinks = data.savedLinks;
-            linksContainer.innerHTML = '';
-            noLinksMessage.style.display = 'none';
-            noSearchResultsMessage.style.display = 'none';
+        if (uniqueTags.length === 0) {
+            tagListContainer.innerHTML = '<p class="no-tags" style="font-style: italic;">No tags found.</p>';
+            return;
+        }
 
-            if (allSavedLinks.length === 0) {
-                noLinksMessage.style.display = 'block';
-                return;
+        uniqueTags.forEach(tagText => {
+            const tagButton = document.createElement('button');
+            tagButton.className = 'tag-btn';
+            if (currentTagFilter === tagText) {
+                tagButton.classList.add('active');
             }
-
-            const lowerSearchTerm = searchTerm.toLowerCase();
-            const lowerTagFilterTerm = tagFilterTerm.toLowerCase().trim();
-
-            const filteredLinks = allSavedLinks.filter(link => {
-                // Main search filter (URL or note)
-                const matchesSearch = link.url.toLowerCase().includes(lowerSearchTerm) ||
-                                      (link.note && link.note.toLowerCase().includes(lowerSearchTerm));
-
-                // NEW: Tag filter
-                const matchesTag = !lowerTagFilterTerm || 
-                                   (link.tags && link.tags.some(tag => tag.toLowerCase().includes(lowerTagFilterTerm)));
-
-                return matchesSearch && matchesTag;
+            tagButton.textContent = tagText;
+            tagButton.addEventListener('click', () => {
+                if (currentTagFilter === tagText) {
+                    currentTagFilter = null;
+                } else {
+                    currentTagFilter = tagText;
+                }
+                filterAndRender();
             });
+            tagListContainer.appendChild(tagButton);
+        });
+    }
 
-            if (filteredLinks.length === 0 && (searchTerm !== '' || tagFilterTerm !== '')) {
-                noSearchResultsMessage.style.display = 'block';
-                return;
-            }
-
-            filteredLinks.forEach((link) => {
-                const linkItem = document.createElement('div');
-                linkItem.classList.add('link-item');
-
-                const titleElement = document.createElement('h3');
-                const linkAnchor = document.createElement('a');
-                linkAnchor.href = link.url;
-                linkAnchor.textContent = link.url;
-                linkAnchor.target = "_blank";
-                linkAnchor.rel = "noopener noreferrer";
-                titleElement.appendChild(linkAnchor);
-                linkItem.appendChild(titleElement);
-
-                if (link.note && link.note.trim() !== '') {
-                    const noteElement = document.createElement('p');
-                    noteElement.textContent = link.note;
-                    linkItem.appendChild(noteElement);
-                }
+    function renderLinks(links) {
+        linksContainer.innerHTML = '';
+        if (links.length === 0) {
+            linksContainer.appendChild(noLinksMessage);
+        } else {
+            noLinksMessage.style.display = 'none';
+            links.forEach((link, index) => {
+                const linkCard = document.createElement('div');
+                linkCard.className = 'link-card';
                 
-                // NEW: Display tags
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'link-checkbox';
+                checkbox.addEventListener('change', toggleBulkDeleteButton);
+                linkCard.appendChild(checkbox);
+                
+                const linkContent = document.createElement('div');
+                linkContent.className = 'link-content';
+
+                const title = document.createElement('div');
+                title.className = 'link-title';
+                title.textContent = link.note || link.url;
+                linkContent.appendChild(title);
+
+                const url = document.createElement('div');
+                url.className = 'link-url';
+                url.textContent = link.url;
+                linkContent.appendChild(url);
+
                 if (link.tags && link.tags.length > 0) {
-                    const tagsContainer = document.createElement('div');
-                    tagsContainer.classList.add('tags-container');
+                    const tagsDiv = document.createElement('div');
+                    tagsDiv.className = 'link-tags';
                     link.tags.forEach(tagText => {
-                        const tagElement = document.createElement('span');
-                        tagElement.classList.add('tag');
-                        tagElement.textContent = tagText;
-                        tagsContainer.appendChild(tagElement);
+                        const tag = document.createElement('span');
+                        tag.className = 'tag';
+                        tag.textContent = tagText;
+                        tagsDiv.appendChild(tag);
                     });
-                    linkItem.appendChild(tagsContainer);
+                    linkContent.appendChild(tagsDiv);
                 }
 
-                const dateElement = document.createElement('p');
-                const date = new Date(link.date);
-                dateElement.classList.add('date');
-                dateElement.textContent = `Saved on: ${date.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} at ${date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
-                linkItem.appendChild(dateElement);
+                const date = document.createElement('div');
+                date.className = 'link-date';
+                const formattedDate = new Date(link.date).toLocaleString();
+                date.textContent = `Saved on: ${formattedDate}`;
+                linkContent.appendChild(date);
+                
+                const actions = document.createElement('div');
+                actions.className = 'link-actions';
+
+                const visitLink = document.createElement('a');
+                visitLink.href = link.url;
+                visitLink.target = '_blank';
+                visitLink.className = 'visit-link';
+                visitLink.textContent = 'Visit';
+                actions.appendChild(visitLink);
+                
+                const editButton = document.createElement('button');
+                editButton.className = 'edit-link';
+                editButton.textContent = 'Edit';
+                editButton.addEventListener('click', () => {
+                    openEditModal(index);
+                });
+                actions.appendChild(editButton);
 
                 const deleteButton = document.createElement('button');
-                deleteButton.classList.add('delete-button');
+                deleteButton.className = 'delete-link';
                 deleteButton.textContent = 'Delete';
-                deleteButton.dataset.url = link.url;
-                deleteButton.dataset.date = link.date;
-                deleteButton.addEventListener('click', function() {
-                    deleteLink(this.dataset.url, this.dataset.date);
+                deleteButton.addEventListener('click', () => {
+                    // Find the original index based on URL to delete from allLinks
+                    const originalIndex = allLinks.findIndex(l => l.url === link.url);
+                    if (originalIndex > -1) {
+                        allLinks.splice(originalIndex, 1);
+                        chrome.storage.local.set({ savedLinks: allLinks }, filterAndRender);
+                    }
                 });
-                linkItem.appendChild(deleteButton);
-
-                linksContainer.appendChild(linkItem);
+                actions.appendChild(deleteButton);
+                
+                linkContent.appendChild(actions);
+                linkCard.appendChild(linkContent);
+                linksContainer.appendChild(linkCard);
             });
-        });
+        }
+        updateLinkCount();
+    }
+    
+    function toggleBulkDeleteButton() {
+        const checkedBoxes = linksContainer.querySelectorAll('.link-checkbox:checked');
+        if (checkedBoxes.length > 0) {
+            deleteSelectedButton.style.display = 'block';
+        } else {
+            deleteSelectedButton.style.display = 'none';
+        }
     }
 
-    // Function to delete a link
-    function deleteLink(urlToDelete, dateToDelete) {
-        chrome.storage.local.get({ savedLinks: [] }, function(data) {
-            let savedLinks = data.savedLinks;
-            const updatedLinks = savedLinks.filter(link => !(link.url === urlToDelete && link.date === dateToDelete));
-
-            chrome.storage.local.set({ savedLinks: updatedLinks }, function() {
-                if (chrome.runtime.lastError) {
-                    console.error("Error deleting link:", chrome.runtime.lastError.message);
-                } else {
-                    console.log("Link deleted successfully.");
-                    // Reload links with current search and tag filter terms
-                    loadAndDisplayLinks(searchInput.value, tagFilterInput.value);
+    function bulkDeleteLinks() {
+        const checkedBoxes = linksContainer.querySelectorAll('.link-checkbox:checked');
+        if (checkedBoxes.length === 0) return;
+        
+        if (confirm(`Are you sure you want to delete ${checkedBoxes.length} selected link(s)?`)) {
+            const urlsToDelete = Array.from(checkedBoxes).map(cb => {
+                const linkCard = cb.closest('.link-card');
+                const urlElement = linkCard.querySelector('.link-url');
+                return urlElement ? urlElement.textContent : null;
+            }).filter(url => url !== null);
+            
+            allLinks = allLinks.filter(link => !urlsToDelete.includes(link.url));
+            
+            chrome.storage.local.set({ savedLinks: allLinks }, function() {
+                if (!chrome.runtime.lastError) {
+                    filterAndRender();
+                    deleteSelectedButton.style.display = 'none';
                 }
             });
-        });
+        }
     }
 
-    // NEW: Function to export all saved links
-    function exportLinks() {
-        chrome.storage.local.get({ savedLinks: [] }, function(data) {
-            const savedLinks = data.savedLinks;
-            const dataStr = JSON.stringify(savedLinks, null, 2); // Pretty-print the JSON
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            // Create a temporary anchor element to trigger the download
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'smart-link-saver-export.json';
-            a.click();
-            
-            // Clean up by revoking the URL object
-            URL.revokeObjectURL(url);
-        });
+    function getFilteredLinks() {
+        let filtered = allLinks;
+        const searchTerm = searchInput.value.toLowerCase();
+        
+        if (searchTerm) {
+            filtered = filtered.filter(link => {
+                const searchString = `${link.note} ${link.url} ${link.tags.join(' ')}`.toLowerCase();
+                return searchString.includes(searchTerm);
+            });
+        }
+        
+        if (currentTagFilter) {
+            filtered = filtered.filter(link => link.tags.includes(currentTagFilter));
+        }
+        return filtered;
     }
 
-    // Event listener for search input
-    searchInput.addEventListener('input', function() {
-        loadAndDisplayLinks(searchInput.value, tagFilterInput.value);
+    function filterAndRender() {
+        const filteredLinks = getFilteredLinks();
+        renderTags();
+        renderLinks(filteredLinks);
+    }
+
+    // Function to export links
+    function exportLinksAsJSON() {
+        const jsonString = JSON.stringify(allLinks, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `smart-link-saver-export-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+    
+    // Function to clear all links with confirmation
+    function clearAllLinks() {
+        if (confirm("Are you sure you want to delete ALL saved links? This cannot be undone.")) {
+            chrome.storage.local.set({ savedLinks: [] }, function() {
+                allLinks = [];
+                currentTagFilter = null;
+                searchInput.value = '';
+                filterAndRender();
+            });
+        }
+    }
+    
+    // Edit Modal Functions
+    function openEditModal(index) {
+        const filteredLinks = getFilteredLinks();
+        const linkToEdit = filteredLinks[index];
+        // Find the original index to update the main allLinks array
+        const originalIndex = allLinks.findIndex(link => link.url === linkToEdit.url);
+
+        editForm.dataset.index = originalIndex;
+        editNoteInput.value = linkToEdit.note;
+        editTagsInput.value = linkToEdit.tags.join(', ');
+        editUrlInput.value = linkToEdit.url; // Corrected line
+        editModal.style.display = 'block';
+        setTimeout(() => editModal.classList.add('show'), 10);
+    }
+
+    function closeEditModal() {
+        editModal.classList.remove('show');
+        setTimeout(() => editModal.style.display = 'none', 300);
+    }
+    
+    editForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const originalIndex = editForm.dataset.index;
+        const editedNote = editNoteInput.value.trim();
+        const editedTags = editTagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        const editedUrl = editUrlInput.value.trim();
+        
+        if (originalIndex !== -1) {
+            allLinks[originalIndex].note = editedNote;
+            allLinks[originalIndex].tags = editedTags;
+            allLinks[originalIndex].url = editedUrl; // Corrected line
+            
+            chrome.storage.local.set({ savedLinks: allLinks }, function() {
+                if (!chrome.runtime.lastError) {
+                    filterAndRender();
+                    closeEditModal();
+                }
+            });
+        }
+    });
+    
+    // Initial render
+    chrome.storage.local.get({ savedLinks: [] }, function(data) {
+        allLinks = data.savedLinks;
+        filterAndRender();
     });
 
-    // NEW: Event listener for tag filter input
-    tagFilterInput.addEventListener('input', function() {
-        loadAndDisplayLinks(searchInput.value, tagFilterInput.value);
+    // Event listeners
+    searchInput.addEventListener('input', () => {
+        currentTagFilter = null; // Clear tag filter on search
+        filterAndRender();
     });
-
-    // NEW: Event listener for the export button
-    exportButton.addEventListener('click', exportLinks);
-
-    // Initial load of links when the page opens
-    loadAndDisplayLinks();
+    exportButton.addEventListener('click', exportLinksAsJSON);
+    clearAllButton.addEventListener('click', clearAllLinks);
+    deleteSelectedButton.addEventListener('click', bulkDeleteLinks);
+    closeButton.addEventListener('click', closeEditModal);
+    cancelEditButton.addEventListener('click', closeEditModal);
+    window.addEventListener('click', (event) => {
+        if (event.target == editModal) {
+            closeEditModal();
+        }
+    });
 });
