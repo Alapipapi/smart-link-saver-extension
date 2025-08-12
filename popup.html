@@ -52,7 +52,7 @@
             color: var(--text-color);
             transition: background-color 0.3s ease, color 0.3s ease;
             box-sizing: border-box;
-            position: relative; /* Added for version number positioning */
+            position: relative;
         }
 
         h1 {
@@ -110,7 +110,6 @@
             box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
 
-        /* Consolidated styling for both buttons for consistency */
         #saveButton, .links-button {
             width: 100%;
             padding: 12px;
@@ -131,20 +130,24 @@
             color: var(--button-text);
             margin-top: 10px;
         }
+
         #saveButton:hover {
             background-color: var(--button-primary-hover);
             transform: translateY(-1px);
         }
+
         #saveButton:active {
             transform: translateY(0);
         }
 
         .links-button {
             margin-top: 15px;
+            margin-bottom: 25px;
             background-color: var(--input-bg);
             color: var(--text-color);
             border: 1px solid var(--input-border);
         }
+
         .links-button:hover {
             background-color: var(--input-border);
         }
@@ -176,21 +179,25 @@
             color: var(--message-success-text);
             border-left: 5px solid var(--message-success-text);
         }
+
         .message.error {
             background-color: var(--message-error-bg);
             color: var(--message-error-text);
             border-left: 5px solid var(--message-error-text);
         }
+
         .message .icon {
             display: flex;
             align-items: center;
             color: inherit;
         }
+
         .message svg {
             width: 20px;
             height: 20px;
             stroke-width: 2.5;
         }
+
         .message .text {
             flex-grow: 1;
         }
@@ -278,7 +285,6 @@
             opacity: 1;
         }
 
-        /* NEW: Version Info Styling */
         #versionInfo {
             position: absolute;
             bottom: 10px;

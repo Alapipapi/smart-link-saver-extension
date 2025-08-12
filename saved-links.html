@@ -268,6 +268,33 @@
             font-style: italic;
             margin-top: 50px;
         }
+
+        /* Styling for the No Notes indicator */
+        .no-notes-indicator-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .no-notes-icon {
+            width: 120px;
+            height: 120px;
+            background-color: #3498db; /* Your primary blue color */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .no-notes-text {
+            color: white;
+            font-size: 1em;
+            font-weight: 700;
+            text-align: center;
+        }
         
         /* Action Buttons */
         .page-actions-top {
@@ -311,11 +338,11 @@
         }
 
         #exportButton {
-            background-color: #c2c7ce;
+            background-color: #b2bac5;
             color: var(--text-color);
         }
         #exportButton:hover {
-            background-color: #aeb3b8;
+            background-color: #8e969d;
             transform: translateY(-2px);
         }
         body.dark-mode #exportButton {

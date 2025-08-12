@@ -13,11 +13,26 @@ document.addEventListener('DOMContentLoaded', function() {
     const editForm = document.getElementById('editForm');
     const editNoteInput = document.getElementById('editNote');
     const editTagsInput = document.getElementById('editTags');
-    const editUrlInput = document.getElementById('editUrl'); // Corrected to use the input field
+    const editUrlInput = document.getElementById('editUrl');
     const cancelEditButton = document.getElementById('cancelEditButton');
     
     let allLinks = [];
     let currentTagFilter = null;
+
+    // Create the "No Search Results" message element
+    const noSearchResultsMessage = document.createElement('div');
+    noSearchResultsMessage.className = 'no-search-results';
+    noSearchResultsMessage.innerHTML = 'No links found for your search query. <span class="clear-search">Clear search</span> to see all links.';
+    noSearchResultsMessage.style.textAlign = 'center';
+    noSearchResultsMessage.style.marginTop = '20px';
+    noSearchResultsMessage.style.color = 'var(--text-color)';
+    noSearchResultsMessage.style.display = 'none';
+
+    // Event listener for clearing search from the message itself
+    noSearchResultsMessage.querySelector('.clear-search').addEventListener('click', () => {
+        searchInput.value = '';
+        filterAndRender();
+    });
 
     // Load theme from storage
     chrome.storage.local.get('theme', function(data) {
@@ -72,10 +87,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function renderLinks(links) {
         linksContainer.innerHTML = '';
+
         if (links.length === 0) {
-            linksContainer.appendChild(noLinksMessage);
+            if (allLinks.length === 0) {
+                linksContainer.appendChild(noLinksMessage);
+                noLinksMessage.style.display = 'block';
+                noSearchResultsMessage.style.display = 'none';
+            } else {
+                linksContainer.appendChild(noSearchResultsMessage);
+                noLinksMessage.style.display = 'none';
+                noSearchResultsMessage.style.display = 'block';
+            }
         } else {
             noLinksMessage.style.display = 'none';
+            noSearchResultsMessage.style.display = 'none';
+
             links.forEach((link, index) => {
                 const linkCard = document.createElement('div');
                 linkCard.className = 'link-card';
@@ -91,7 +117,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const title = document.createElement('div');
                 title.className = 'link-title';
-                title.textContent = link.note || link.url;
+
+                const hasNote = link.note && link.note.trim() !== '';
+
+                if (hasNote) {
+                    title.textContent = link.note;
+                } else {
+                    title.textContent = 'No Notes';
+                }
                 linkContent.appendChild(title);
 
                 const url = document.createElement('div');
@@ -131,7 +164,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 editButton.className = 'edit-link';
                 editButton.textContent = 'Edit';
                 editButton.addEventListener('click', () => {
-                    openEditModal(index);
+                    const originalIndex = allLinks.findIndex(l => l.url === link.url);
+                    openEditModal(originalIndex);
                 });
                 actions.appendChild(editButton);
 
@@ -139,7 +173,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 deleteButton.className = 'delete-link';
                 deleteButton.textContent = 'Delete';
                 deleteButton.addEventListener('click', () => {
-                    // Find the original index based on URL to delete from allLinks
                     const originalIndex = allLinks.findIndex(l => l.url === link.url);
                     if (originalIndex > -1) {
                         allLinks.splice(originalIndex, 1);
@@ -210,7 +243,6 @@ document.addEventListener('DOMContentLoaded', function() {
         renderLinks(filteredLinks);
     }
 
-    // Function to export links
     function exportLinksAsJSON() {
         const jsonString = JSON.stringify(allLinks, null, 2);
         const blob = new Blob([jsonString], { type: 'application/json' });
@@ -224,7 +256,6 @@ document.addEventListener('DOMContentLoaded', function() {
         URL.revokeObjectURL(url);
     }
     
-    // Function to clear all links with confirmation
     function clearAllLinks() {
         if (confirm("Are you sure you want to delete ALL saved links? This cannot be undone.")) {
             chrome.storage.local.set({ savedLinks: [] }, function() {
@@ -236,17 +267,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Edit Modal Functions
-    function openEditModal(index) {
-        const filteredLinks = getFilteredLinks();
-        const linkToEdit = filteredLinks[index];
-        // Find the original index to update the main allLinks array
-        const originalIndex = allLinks.findIndex(link => link.url === linkToEdit.url);
-
+    function openEditModal(originalIndex) {
+        const linkToEdit = allLinks[originalIndex];
         editForm.dataset.index = originalIndex;
         editNoteInput.value = linkToEdit.note;
         editTagsInput.value = linkToEdit.tags.join(', ');
-        editUrlInput.value = linkToEdit.url; // Corrected line
+        editUrlInput.value = linkToEdit.url;
         editModal.style.display = 'block';
         setTimeout(() => editModal.classList.add('show'), 10);
     }
@@ -266,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (originalIndex !== -1) {
             allLinks[originalIndex].note = editedNote;
             allLinks[originalIndex].tags = editedTags;
-            allLinks[originalIndex].url = editedUrl; // Corrected line
+            allLinks[originalIndex].url = editedUrl;
             
             chrome.storage.local.set({ savedLinks: allLinks }, function() {
                 if (!chrome.runtime.lastError) {
@@ -285,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Event listeners
     searchInput.addEventListener('input', () => {
-        currentTagFilter = null; // Clear tag filter on search
+        currentTagFilter = null;
         filterAndRender();
     });
     exportButton.addEventListener('click', exportLinksAsJSON);
