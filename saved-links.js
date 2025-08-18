@@ -4,12 +4,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportButton = document.getElementById('exportButton');
     const clearAllButton = document.getElementById('clearAllButton');
     const deleteSelectedButton = document.getElementById('deleteSelectedButton');
-    const noLinksMessage = linksContainer.querySelector('.no-links');
+    const noLinksMessage = linksContainer ? linksContainer.querySelector('.no-links') : null;
     const tagListContainer = document.getElementById('tagList');
     const linkCountDisplay = document.getElementById('linkCount');
+    const sortOptions = document.getElementById('sortOptions');
 
     const editModal = document.getElementById('editModal');
-    const closeButton = editModal.querySelector('.close');
+    const closeButton = editModal ? editModal.querySelector('.close') : null;
     const editForm = document.getElementById('editForm');
     const editNoteInput = document.getElementById('editNote');
     const editTagsInput = document.getElementById('editTags');
@@ -19,22 +20,21 @@ document.addEventListener('DOMContentLoaded', function() {
     let allLinks = [];
     let currentTagFilter = null;
 
-    // Create the "No Search Results" message element
     const noSearchResultsMessage = document.createElement('div');
     noSearchResultsMessage.className = 'no-search-results';
     noSearchResultsMessage.innerHTML = 'No links found for your search query. <span class="clear-search">Clear search</span> to see all links.';
     noSearchResultsMessage.style.textAlign = 'center';
     noSearchResultsMessage.style.marginTop = '20px';
-    noSearchResultsMessage.style.color = 'var(--text-color)';
+    noSearchResultsMessage.style.color = 'var(--secondary-text-color)';
     noSearchResultsMessage.style.display = 'none';
 
-    // Event listener for clearing search from the message itself
-    noSearchResultsMessage.querySelector('.clear-search').addEventListener('click', () => {
-        searchInput.value = '';
-        filterAndRender();
-    });
+    if (noSearchResultsMessage.querySelector('.clear-search')) {
+        noSearchResultsMessage.querySelector('.clear-search').addEventListener('click', () => {
+            searchInput.value = '';
+            filterAndRender();
+        });
+    }
 
-    // Load theme from storage
     chrome.storage.local.get('theme', function(data) {
         if (data.theme === 'dark') {
             document.body.classList.add('dark-mode');
@@ -42,9 +42,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     function updateLinkCount() {
+        if (!linkCountDisplay) return;
         const totalLinks = allLinks.length;
         const displayedLinks = linksContainer.querySelectorAll('.link-card').length;
-        if (totalLinks === displayedLinks) {
+        if (totalLinks === displayedLinks || displayedLinks === 0) {
             linkCountDisplay.textContent = `${totalLinks} Links Saved`;
         } else {
             linkCountDisplay.textContent = `${displayedLinks} of ${totalLinks} Links Displayed`;
@@ -52,6 +53,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderTags() {
+        if (!tagListContainer) return;
         tagListContainer.innerHTML = '';
         if (allLinks.length === 0) {
             tagListContainer.innerHTML = '<p class="no-tags" style="font-style: italic;">No tags found.</p>';
@@ -84,22 +86,54 @@ document.addEventListener('DOMContentLoaded', function() {
             tagListContainer.appendChild(tagButton);
         });
     }
+    
+    function sortLinks(links, sortBy) {
+        if (!sortBy) return links;
+
+        const [property, order] = sortBy.split('-');
+
+        return links.sort((a, b) => {
+            let aValue, bValue;
+
+            if (property === 'date') {
+                aValue = new Date(a.date);
+                bValue = new Date(b.date);
+            } else if (property === 'url') {
+                aValue = a.url.toLowerCase();
+                bValue = b.url.toLowerCase();
+            } else if (property === 'note') {
+                aValue = (a.note || '').toLowerCase();
+                bValue = (b.note || '').toLowerCase();
+            }
+
+            if (aValue < bValue) return order === 'asc' ? -1 : 1;
+            if (aValue > bValue) return order === 'asc' ? 1 : -1;
+            return 0;
+        });
+    }
 
     function renderLinks(links) {
+        if (!linksContainer) return;
         linksContainer.innerHTML = '';
 
         if (links.length === 0) {
             if (allLinks.length === 0) {
-                linksContainer.appendChild(noLinksMessage);
-                noLinksMessage.style.display = 'block';
+                if (noLinksMessage) {
+                    linksContainer.appendChild(noLinksMessage);
+                    noLinksMessage.style.display = 'block';
+                }
                 noSearchResultsMessage.style.display = 'none';
             } else {
                 linksContainer.appendChild(noSearchResultsMessage);
-                noLinksMessage.style.display = 'none';
+                if (noLinksMessage) {
+                    noLinksMessage.style.display = 'none';
+                }
                 noSearchResultsMessage.style.display = 'block';
             }
         } else {
-            noLinksMessage.style.display = 'none';
+            if (noLinksMessage) {
+                noLinksMessage.style.display = 'none';
+            }
             noSearchResultsMessage.style.display = 'none';
 
             links.forEach((link, index) => {
@@ -129,8 +163,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const url = document.createElement('div');
                 url.className = 'link-url';
-                url.textContent = link.url;
+                const maxLength = 60;
+                
+                const truncatedUrl = link.url.length > maxLength ? link.url.substring(0, maxLength) + '...' : link.url;
+
+                const urlLink = document.createElement('a');
+                urlLink.href = link.url;
+                urlLink.target = '_blank';
+                urlLink.rel = 'noopener noreferrer';
+                urlLink.textContent = truncatedUrl;
+                urlLink.title = link.url;
+                url.appendChild(urlLink);
+
                 linkContent.appendChild(url);
+
 
                 if (link.tags && link.tags.length > 0) {
                     const tagsDiv = document.createElement('div');
@@ -158,7 +204,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 visitLink.target = '_blank';
                 visitLink.className = 'visit-link';
                 visitLink.textContent = 'Visit';
-                actions.appendChild(visitLink);
+                
+                const copyButton = document.createElement('button');
+                copyButton.className = 'copy-link';
+                copyButton.textContent = 'Copy';
+                copyButton.addEventListener('click', () => {
+                    const textToCopy = `Title: ${link.note || link.url}\nURL: ${link.url}\nTags: ${link.tags.join(', ')}`;
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        alert('Link details copied to clipboard!');
+                    }).catch(err => {
+                        console.error('Failed to copy text: ', err);
+                    });
+                });
                 
                 const editButton = document.createElement('button');
                 editButton.className = 'edit-link';
@@ -167,18 +224,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     const originalIndex = allLinks.findIndex(l => l.url === link.url);
                     openEditModal(originalIndex);
                 });
-                actions.appendChild(editButton);
 
                 const deleteButton = document.createElement('button');
                 deleteButton.className = 'delete-link';
                 deleteButton.textContent = 'Delete';
                 deleteButton.addEventListener('click', () => {
-                    const originalIndex = allLinks.findIndex(l => l.url === link.url);
-                    if (originalIndex > -1) {
-                        allLinks.splice(originalIndex, 1);
+                    const linkUrl = link.url;
+                    if (confirm(`Are you sure you want to delete the link:\n${link.note || linkUrl}\n\nThis cannot be undone.`)) {
+                        allLinks = allLinks.filter(l => l.url !== linkUrl);
                         chrome.storage.local.set({ savedLinks: allLinks }, filterAndRender);
                     }
                 });
+
+                actions.appendChild(visitLink);
+                actions.appendChild(copyButton);
+                actions.appendChild(editButton);
                 actions.appendChild(deleteButton);
                 
                 linkContent.appendChild(actions);
@@ -191,10 +251,8 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function toggleBulkDeleteButton() {
         const checkedBoxes = linksContainer.querySelectorAll('.link-checkbox:checked');
-        if (checkedBoxes.length > 0) {
-            deleteSelectedButton.style.display = 'block';
-        } else {
-            deleteSelectedButton.style.display = 'none';
+        if (deleteSelectedButton) {
+            deleteSelectedButton.style.display = checkedBoxes.length > 0 ? 'block' : 'none';
         }
     }
 
@@ -205,8 +263,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (confirm(`Are you sure you want to delete ${checkedBoxes.length} selected link(s)?`)) {
             const urlsToDelete = Array.from(checkedBoxes).map(cb => {
                 const linkCard = cb.closest('.link-card');
-                const urlElement = linkCard.querySelector('.link-url');
-                return urlElement ? urlElement.textContent : null;
+                const urlElement = linkCard.querySelector('.link-url a');
+                return urlElement ? urlElement.href : null;
             }).filter(url => url !== null);
             
             allLinks = allLinks.filter(link => !urlsToDelete.includes(link.url));
@@ -214,27 +272,37 @@ document.addEventListener('DOMContentLoaded', function() {
             chrome.storage.local.set({ savedLinks: allLinks }, function() {
                 if (!chrome.runtime.lastError) {
                     filterAndRender();
-                    deleteSelectedButton.style.display = 'none';
+                    if (deleteSelectedButton) {
+                        deleteSelectedButton.style.display = 'none';
+                    }
                 }
             });
         }
     }
 
     function getFilteredLinks() {
-        let filtered = allLinks;
-        const searchTerm = searchInput.value.toLowerCase();
+        let filtered = [...allLinks]; // Create a copy to sort
+
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
         
         if (searchTerm) {
-            filtered = filtered.filter(link => {
-                const searchString = `${link.note} ${link.url} ${link.tags.join(' ')}`.toLowerCase();
-                return searchString.includes(searchTerm);
-            });
+            if (searchTerm.startsWith('#')) {
+                const tagSearchTerm = searchTerm.substring(1).trim();
+                filtered = filtered.filter(link => link.tags.some(tag => tag.toLowerCase().includes(tagSearchTerm)));
+            } else {
+                filtered = filtered.filter(link => {
+                    const searchString = `${link.note} ${link.url} ${link.tags.join(' ')}`.toLowerCase();
+                    return searchString.includes(searchTerm);
+                });
+            }
         }
         
         if (currentTagFilter) {
             filtered = filtered.filter(link => link.tags.includes(currentTagFilter));
         }
-        return filtered;
+        
+        const sortBy = sortOptions ? sortOptions.value : 'date-desc';
+        return sortLinks(filtered, sortBy);
     }
 
     function filterAndRender() {
@@ -261,48 +329,57 @@ document.addEventListener('DOMContentLoaded', function() {
             chrome.storage.local.set({ savedLinks: [] }, function() {
                 allLinks = [];
                 currentTagFilter = null;
-                searchInput.value = '';
+                if (searchInput) {
+                    searchInput.value = '';
+                }
                 filterAndRender();
             });
         }
     }
     
     function openEditModal(originalIndex) {
+        if (originalIndex === -1) return;
         const linkToEdit = allLinks[originalIndex];
-        editForm.dataset.index = originalIndex;
-        editNoteInput.value = linkToEdit.note;
-        editTagsInput.value = linkToEdit.tags.join(', ');
-        editUrlInput.value = linkToEdit.url;
-        editModal.style.display = 'block';
-        setTimeout(() => editModal.classList.add('show'), 10);
+        if (editForm && editNoteInput && editTagsInput && editUrlInput) {
+            editForm.dataset.index = originalIndex;
+            editNoteInput.value = linkToEdit.note || '';
+            editTagsInput.value = linkToEdit.tags.join(', ');
+            editUrlInput.value = linkToEdit.url;
+            editModal.style.display = 'block';
+            setTimeout(() => editModal.classList.add('show'), 10);
+        }
     }
 
     function closeEditModal() {
-        editModal.classList.remove('show');
-        setTimeout(() => editModal.style.display = 'none', 300);
+        if (editModal) {
+            editModal.classList.remove('show');
+            setTimeout(() => editModal.style.display = 'none', 300);
+        }
     }
     
-    editForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const originalIndex = editForm.dataset.index;
-        const editedNote = editNoteInput.value.trim();
-        const editedTags = editTagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
-        const editedUrl = editUrlInput.value.trim();
-        
-        if (originalIndex !== -1) {
-            allLinks[originalIndex].note = editedNote;
-            allLinks[originalIndex].tags = editedTags;
-            allLinks[originalIndex].url = editedUrl;
+    if (editForm) {
+        editForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const originalIndex = editForm.dataset.index;
+            const editedNote = editNoteInput.value.trim();
+            const editedTags = editTagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+            const editedUrl = editUrlInput.value.trim();
             
-            chrome.storage.local.set({ savedLinks: allLinks }, function() {
-                if (!chrome.runtime.lastError) {
-                    filterAndRender();
-                    closeEditModal();
-                }
-            });
-        }
-    });
-    
+            if (originalIndex !== null && originalIndex !== -1) {
+                allLinks[originalIndex].note = editedNote;
+                allLinks[originalIndex].tags = editedTags;
+                allLinks[originalIndex].url = editedUrl;
+                
+                chrome.storage.local.set({ savedLinks: allLinks }, function() {
+                    if (!chrome.runtime.lastError) {
+                        filterAndRender();
+                        closeEditModal();
+                    }
+                });
+            }
+        });
+    }
+
     // Initial render
     chrome.storage.local.get({ savedLinks: [] }, function(data) {
         allLinks = data.savedLinks;
@@ -310,18 +387,35 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Event listeners
-    searchInput.addEventListener('input', () => {
-        currentTagFilter = null;
-        filterAndRender();
-    });
-    exportButton.addEventListener('click', exportLinksAsJSON);
-    clearAllButton.addEventListener('click', clearAllLinks);
-    deleteSelectedButton.addEventListener('click', bulkDeleteLinks);
-    closeButton.addEventListener('click', closeEditModal);
-    cancelEditButton.addEventListener('click', closeEditModal);
-    window.addEventListener('click', (event) => {
-        if (event.target == editModal) {
-            closeEditModal();
-        }
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            currentTagFilter = null;
+            filterAndRender();
+        });
+    }
+    if (sortOptions) {
+        sortOptions.addEventListener('change', filterAndRender);
+    }
+    if (exportButton) {
+        exportButton.addEventListener('click', exportLinksAsJSON);
+    }
+    if (clearAllButton) {
+        clearAllButton.addEventListener('click', clearAllLinks);
+    }
+    if (deleteSelectedButton) {
+        deleteSelectedButton.addEventListener('click', bulkDeleteLinks);
+    }
+    if (closeButton) {
+        closeButton.addEventListener('click', closeEditModal);
+    }
+    if (cancelEditButton) {
+        cancelEditButton.addEventListener('click', closeEditModal);
+    }
+    if (editModal) {
+        window.addEventListener('click', (event) => {
+            if (event.target == editModal) {
+                closeEditModal();
+            }
+        });
+    }
 });

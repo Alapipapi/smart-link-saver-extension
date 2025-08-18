@@ -81,13 +81,14 @@
             margin-bottom: 32px;
         }
         
-        /* Search & Tags */
-        #searchContainer {
+        /* Search, Sort & Tags */
+        #searchAndSortContainer {
+            display: flex;
+            gap: 16px;
             margin-bottom: 24px;
         }
-
         #searchInput {
-            width: 100%;
+            flex-grow: 1;
             padding: 14px 18px;
             border-radius: 12px;
             border: 1px solid var(--search-border);
@@ -103,6 +104,17 @@
             outline: none;
             border-color: var(--button-primary-bg);
             box-shadow: 0 0 0 3px rgba(76, 81, 191, 0.1);
+        }
+        
+        #sortOptions {
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid var(--search-border);
+            background-color: var(--search-bg);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            font-size: 1em;
+            cursor: pointer;
         }
 
         .tag-cloud {
@@ -187,6 +199,13 @@
             word-break: break-all;
             margin-bottom: 16px;
         }
+        .link-url a {
+            color: var(--secondary-text-color);
+            text-decoration: none;
+        }
+        .link-url a:hover {
+            text-decoration: underline;
+        }
 
         .link-note {
             margin-bottom: 16px;
@@ -243,10 +262,12 @@
             transform: translateY(-2px);
         }
         
+        .link-actions .copy-link,
         .link-actions .edit-link {
             background-color: var(--button-secondary-bg);
             color: var(--text-color);
         }
+        .link-actions .copy-link:hover,
         .link-actions .edit-link:hover {
             background-color: var(--button-secondary-hover);
             transform: translateY(-2px);
@@ -383,6 +404,7 @@
             background-color: var(--modal-bg);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
+            opacity: 0;
             transition: opacity 0.3s ease;
         }
         .modal.show {
@@ -501,8 +523,16 @@
         </div>
     </div>
     
-    <div id="searchContainer">
-        <input type="text" id="searchInput" placeholder="Search by URL, note, or tags...">
+    <div id="searchAndSortContainer">
+        <input type="text" id="searchInput" placeholder="Search by URL, note, or #tags...">
+        <select id="sortOptions">
+            <option value="date-desc">Date (Newest)</option>
+            <option value="date-asc">Date (Oldest)</option>
+            <option value="url-asc">URL (A-Z)</option>
+            <option value="url-desc">URL (Z-A)</option>
+            <option value="note-asc">Note (A-Z)</option>
+            <option value="note-desc">Note (Z-A)</option>
+        </select>
     </div>
     <div id="linksContainer">
         <p class="no-links">No links saved yet.</p>
