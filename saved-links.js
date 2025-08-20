@@ -17,6 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const editUrlInput = document.getElementById('editUrl');
     const cancelEditButton = document.getElementById('cancelEditButton');
     
+    // New: Dark mode toggle element
+    const darkModeToggle = document.getElementById('darkModeToggle');
+
     let allLinks = [];
     let currentTagFilter = null;
 
@@ -35,12 +38,32 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    chrome.storage.local.get('theme', function(data) {
-        if (data.theme === 'dark') {
+    // New: Theme management logic
+    function applyTheme(theme) {
+        if (theme === 'dark') {
             document.body.classList.add('dark-mode');
+            if (darkModeToggle) darkModeToggle.checked = true;
+        } else {
+            document.body.classList.remove('dark-mode');
+            if (darkModeToggle) darkModeToggle.checked = false;
         }
+    }
+    
+    // Initial theme load
+    chrome.storage.local.get('theme', function(data) {
+        const savedTheme = data.theme || 'light';
+        applyTheme(savedTheme);
     });
     
+    // New: Event listener for the theme toggle
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('change', function() {
+            const newTheme = this.checked ? 'dark' : 'light';
+            applyTheme(newTheme);
+            chrome.storage.local.set({ theme: newTheme });
+        });
+    }
+
     function updateLinkCount() {
         if (!linkCountDisplay) return;
         const totalLinks = allLinks.length;

@@ -28,11 +28,17 @@
             --modal-border: #e2e8f0;
             --shadow-color: rgba(0, 0, 0, 0.1);
             --font-family: 'Poppins', sans-serif;
+
+            /* New: Theme Toggle Colors */
+            --toggle-bg-light: #cbd5e0;
+            --toggle-thumb: #ffffff;
+            --toggle-sun-color: #f1c40f;
+            --toggle-moon-color: #85b0ed;
         }
 
         /* Dark Mode Colors */
         body.dark-mode {
-            --background-color: #2C3E50;
+            --background-color: #2c3e50;
             --text-color: #e2e8f0;
             --secondary-text-color: #a0aec0;
             --link-bg: #34495e;
@@ -53,6 +59,12 @@
             --modal-content-bg: #34495e;
             --modal-border: #4a6279;
             --shadow-color: rgba(0, 0, 0, 0.3);
+
+            /* New: Theme Toggle Dark Mode Colors */
+            --toggle-bg-dark: #566c80;
+            --toggle-thumb: #ecf0f1;
+            --toggle-sun-color: #f1c40f;
+            --toggle-moon-color: #ecf0f1;
         }
 
         /* Base & Layout */
@@ -504,11 +516,104 @@
         #cancelEditButton:hover {
             background-color: var(--button-secondary-hover);
         }
+
+        /* New: Dark Mode Toggle Switch */
+        .theme-toggle-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 10px;
+        }
+        .theme-toggle {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--toggle-bg-light);
+            transition: background-color 0.4s ease;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: var(--toggle-thumb);
+            transition: 0.4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .slider .icon {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: opacity 0.4s ease, color 0.4s ease;
+        }
+        .slider .sun-icon {
+            right: 6px;
+            opacity: 1;
+            color: var(--toggle-sun-color);
+        }
+        .slider .moon-icon {
+            left: 6px;
+            opacity: 0;
+            color: var(--toggle-moon-color);
+        }
+        input:checked + .slider {
+            background-color: var(--toggle-bg-dark);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        input:checked + .slider .sun-icon {
+            opacity: 0;
+        }
+        input:checked + .slider .moon-icon {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
     <div class="page-header">
         <h1>Saved Links</h1>
+        <div class="theme-toggle-container">
+            <label class="theme-toggle">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider">
+                    <svg class="icon sun-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 17C14.7614 17 17 14.7614 17 12C17 9.23858 14.7614 7 12 7C9.23858 7 7 9.23858 7 12C7 14.7614 9.23858 17 12 17Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 2V4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M12 20V22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4.93 4.93L6.344 6.344" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17.656 17.656L19.07 19.07" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M2 12H4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M20 12H22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M4.93 19.07L6.344 17.656" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M17.656 6.344L19.07 4.93" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    <svg class="icon moon-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M21 12.79C20.67 14.33 19.86 15.72 18.73 16.85C17.6 17.98 16.21 18.79 14.67 19.12C13.13 19.45 11.52 19.33 10.05 18.77C8.58 18.21 7.27 17.23 6.27 15.99C5.26 14.75 4.58 13.3 4.34 11.75C4.1 10.21 4.32 8.65 4.98 7.26C5.64 5.87 6.72 4.71 8.08 3.96C9.44 3.21 10.98 2.91 12.5 3.12C14.03 3.33 15.48 3.96 16.7 4.96C17.92 5.96 18.86 7.26 19.46 8.68C20.06 10.11 20.31 11.64 20.17 13.18L21 12.79Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+            </label>
+        </div>
     </div>
 
     <div class="page-actions-top">

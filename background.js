@@ -19,7 +19,6 @@ chrome.runtime.onInstalled.addListener(() => {
     console.log("Smart Link Saver extension installed or updated.");
 });
 
-
 // --- NEW: Keyboard Shortcut Listener ---
 // Listen for the command to be triggered
 chrome.commands.onCommand.addListener(async (command) => {
